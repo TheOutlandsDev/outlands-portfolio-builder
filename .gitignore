@@ -1,0 +1,9 @@
+.git/
+.venv/
+__pycache__/
+*.pyc
+output/
+private-inputs/
+.env
+.env.*
+coverage/
