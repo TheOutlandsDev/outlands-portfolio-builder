@@ -1,0 +1,19 @@
+name: Suggest an improvement
+description: Workflow, document-layout and accessibility feedback are welcome.
+title: "[Suggestion]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Who needs this, and what problem would it solve?
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What would a useful result look like?
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "You do not need to contribute code. Use fictional examples and keep private portfolios and evidence out of this public issue."
