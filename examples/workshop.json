@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "name": "Alex Example",
+    "title": "Developer and practical problem solver",
+    "summary": "A fictional portfolio showing how to describe a project, its limitations and its supporting evidence without presenting planned work as completed work.",
+    "skills": ["Python", "Testing", "Documentation", "Local tools"],
+    "contact": ["alex@example.invalid", "Fictional demonstration - no real person or employer"]
+  },
+  "projects": [
+    {
+      "id": "workshop-inventory",
+      "title": "Workshop inventory helper",
+      "role": "Example author and maintainer",
+      "summary": "A fictional utility for listing materials before a small workshop project.",
+      "problem": "A short material list was easier to use than scattered notes.",
+      "approach": "The example describes a bounded input format, a simple report and generated test fixtures.",
+      "limitations": "This portfolio is fictional. The demonstration receipt is not evidence that an inventory application actually exists or passed tests.",
+      "outcomes": [
+        {"status": "reported", "statement": "The fictional author reports trying a small generated inventory.", "evidence": ["demo-receipt"]},
+        {"status": "planned", "statement": "Barcode entry remains a future idea.", "evidence": []}
+      ]
+    },
+    {
+      "id": "community-guide",
+      "title": "Community project guide",
+      "role": "Example writer and editor",
+      "summary": "A fictional guide that turns a project into a clear problem, approach, outcome and next step.",
+      "problem": "Readers needed to understand what had actually been tried.",
+      "approach": "Use short sections and explicit claim labels, then ask readers which steps need clarification.",
+      "limitations": "Reader acceptance has not been measured. No external page is fetched or validated by this builder.",
+      "outcomes": [
+        {"status": "unverified", "statement": "The example does not establish that the guide improves comprehension.", "evidence": ["example-link"]},
+        {"status": "observed", "statement": "The fictional author marks a draft as personally reviewed; this remains an author-stated label.", "evidence": ["review-note"]}
+      ]
+    }
+  ],
+  "evidence": [
+    {"id": "demo-receipt", "label": "Generated demonstration receipt", "kind": "file", "source": "receipt.txt", "note": "Fictional text supplied only to demonstrate optional SHA-256 recording."},
+    {"id": "example-link", "label": "Fictional reference URL", "kind": "link", "source": "https://example.invalid/guide", "note": "This reserved example address is never fetched."},
+    {"id": "review-note", "label": "Author review note", "kind": "note", "note": "This example contains no real acceptance or runtime-test evidence."}
+  ]
+}
