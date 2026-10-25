@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible issue using fictional input.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Keep real résumés, employer/client details, private input and evidence out of public reports. Use the fictional example. See SECURITY.md for vulnerabilities."
+  - type: input
+    id: versions
+    attributes:
+      label: OS, Python version and app commit/version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and minimal fictional input
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result
+    validations:
+      required: true
