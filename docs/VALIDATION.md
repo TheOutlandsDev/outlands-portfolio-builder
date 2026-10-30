@@ -16,7 +16,7 @@ suite and then the 45-case suite. The 47-case suite added pre-export review
 coverage and passed as a full local run in 10.928 seconds, with zero failures,
 errors or skips. After the queued-review Stop fix, the current 48-case suite
 passed locally in 12.694 seconds, with zero failures, errors or skips. The
-48-case run is local acceptance; Windows CI for this new fix remains pending.
+48-case run is local acceptance; see Actions for the revision's hosted CI result.
 
 The tests generate their own portfolios, evidence and temporary directories.
 They cover schema/size/depth/type limits, duplicate JSON keys and IDs, evidence
