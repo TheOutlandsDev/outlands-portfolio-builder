@@ -83,6 +83,10 @@ The workflow installs the exact runtime/test pins and requires Tk on Windows and
 Ubuntu with Python 3.12 and 3.13, using Xvfb on Ubuntu. It runs the source gate,
 full suite, fictional CLI export and separate verification. Tests make no runtime
 network call; package installation and the separate advisory-check step use PyPI.
+For pull requests, the Windows 3.12 job also attempts to capture both tabs of
+the fictional review window after checking the cancel/no-write and confirmed
+export paths. It uploads short-lived screenshots for human visual inspection;
+the artifact alone is not a visual PASS.
 See [Actions](https://github.com/TheOutlandsDev/outlands-portfolio-builder/actions)
 for actual results, rather than treating workflow configuration as a passing run.
 
