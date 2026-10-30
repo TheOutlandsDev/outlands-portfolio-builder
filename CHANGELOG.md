@@ -7,6 +7,8 @@
   confirmation writes the same in-memory PDF, HTML, CSV, JSON and ZIP bytes.
 - Added fictional tests for no-write cancellation, existing-destination
   protection and byte identity between review and export.
+- A Stop request arriving after preparation but before the review window opens
+  now discards the queued review without writing output.
 
 ## 1.0.0 - 2026-10-25
 

@@ -371,7 +371,11 @@ class App(ttk.Frame):
                 if kind == 'status': self.status.set(value)
                 else:
                     self.busy = False; self.export_button.configure(state='normal'); self.stop_button.configure(state='disabled')
-                    if kind == 'review': self.show_review(*value)
+                    if kind == 'review':
+                        if self.cancel.is_set():
+                            self.status.set('Preparation cancelled. No output was written.')
+                        else:
+                            self.show_review(*value)
                     else: self.status.set(f'Export complete: {value["files"]} files, checked ZIP. Review all output before sharing.' if kind == 'done' else str(value) + ' A partial new folder may remain.')
         except queue.Empty: pass
         self.poll_id = self.after(100, self.poll)

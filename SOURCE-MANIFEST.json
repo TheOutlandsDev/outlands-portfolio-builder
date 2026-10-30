@@ -29,8 +29,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 1191,
-      "sha256": "63026519931ec7f5a6878f3fa8c1e2e63c3321752d0c128f5f91138e0640a26a"
+      "bytes": 1327,
+      "sha256": "8246cb0f6734de9c87f1a33b6d0f1d7cfeb94076af77388516c7278421aed2f5"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -74,8 +74,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 6640,
-      "sha256": "8b96c0f51e74326907a76af44793972110fafb8336d1dbc7445125ad26cbaebf"
+      "bytes": 6912,
+      "sha256": "02261dbb9da273c31297d061017c47521111529d26dfffb774f2a9de7c3308b0"
     },
     {
       "path": "examples/WALKTHROUGH.md",
@@ -99,8 +99,8 @@
     },
     {
       "path": "portfolio_gui.py",
-      "bytes": 25748,
-      "sha256": "922721b544395cb587b2da37a370f5a9fe53a6b164ace930f88c1dd2e7472107"
+      "bytes": 25948,
+      "sha256": "dd77874fe1b3b1ca0feda5eb62a492cc1cebfda9f1765f38c2e58754cf6580d9"
     },
     {
       "path": "requirements-dev.txt",
@@ -119,8 +119,8 @@
     },
     {
       "path": "tests/test_portfolio.py",
-      "bytes": 31344,
-      "sha256": "bb06f082b5416b613aff0aa7ee43abd9c2bb319028e12ff92e2e66b659cd7d19"
+      "bytes": 32166,
+      "sha256": "11fb3e9d37ce7f29b65d4df700a599e7a4513cd96b29c62bbdb8d5ad64796fe5"
     }
   ]
 }
