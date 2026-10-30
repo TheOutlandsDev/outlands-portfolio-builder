@@ -14,7 +14,7 @@ import re
 import stat
 import sys
 import threading
-from typing import Callable
+from typing import Callable, NamedTuple
 from urllib.parse import urlsplit
 import zipfile
 
@@ -480,15 +480,30 @@ def write_input(document, base, output):
     except OSError:
         raise BuildError('input save: cannot create a new file; existing files are never replaced') from None
 
-def export(document, base, output, check_files=False, cancel=None, progress: Callable[[str], None] = lambda _: None):
+class PreparedBundle(NamedTuple):
+    """Frozen export bytes; review and writing use this same snapshot."""
+    members: dict[str, bytes]
+    archive: bytes
+    projects: int
+
+def check_output(output):
     output = plain_path(output, existing=False)
     plain_path(output.parent)
     if output.exists(): raise BuildError('output: choose a new directory; existing directories are never replaced')
+    return output
+
+def prepare_export(document, base, check_files=False, cancel=None, progress: Callable[[str], None] = lambda _: None):
     progress('Validating content, optional evidence hashes, and PDF layout...')
     members = build_members(document, base, check_files, cancel)
     check_cancel(cancel); progress('Verifying ZIP members and checksums...')
     archive = zip_members(members)
     if len(archive) > MAX_OUTPUT: raise BuildError('ZIP exceeds 32 MiB')
+    check_cancel(cancel)
+    return PreparedBundle(members, archive, len(document['projects']))
+
+def write_prepared(prepared: PreparedBundle, output, cancel=None):
+    output = check_output(output)
+    members, archive = prepared.members, prepared.archive
     check_cancel(cancel)
     try:
         # All rendering/verification occurs first. Never merge, overwrite or delete a destination.
@@ -504,8 +519,13 @@ def export(document, base, output, check_files=False, cancel=None, progress: Cal
     except OSError:
         raise BuildError('output: write failed; a partial new directory may remain') from None
     verify_bundle(output)
-    return {'status': 'PASS', 'files': len(all_files), 'projects': len(document['projects']),
+    return {'status': 'PASS', 'files': len(all_files), 'projects': prepared.projects,
             'archive_sha256': sha(archive), 'evidence_contents_included': False}
+
+def export(document, base, output, check_files=False, cancel=None, progress: Callable[[str], None] = lambda _: None):
+    check_output(output)
+    prepared = prepare_export(document, base, check_files, cancel, progress)
+    return write_prepared(prepared, output, cancel)
 
 def cli(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)

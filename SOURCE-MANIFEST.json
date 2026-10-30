@@ -19,8 +19,8 @@
     },
     {
       "path": ".github/workflows/checks.yml",
-      "bytes": 1365,
-      "sha256": "d3444a0fdaad0d9211fc58bee2ae01319d955d3206d81f70d4078b36f195859b"
+      "bytes": 1976,
+      "sha256": "32e19ffa1cf9c9ac5590379d8736a958850660a193d144e841d2e79799182850"
     },
     {
       "path": ".gitignore",
@@ -29,8 +29,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 801,
-      "sha256": "aec8c8c69f399ec72ddecc295f67b6f154dd5e4270c64b6e1fc0410fb3b8bd36"
+      "bytes": 1327,
+      "sha256": "8246cb0f6734de9c87f1a33b6d0f1d7cfeb94076af77388516c7278421aed2f5"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -44,8 +44,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 11962,
-      "sha256": "f414fccf210d4dd3b5f782b2521d294923c61a9b85c32884552890b4ec90ec4d"
+      "bytes": 12422,
+      "sha256": "44fe64113a29f0e80c21a7ae0c306a01fcf804a1382c9cfcaa349ee697f12055"
     },
     {
       "path": "SECURITY.md",
@@ -74,8 +74,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 4132,
-      "sha256": "c69814ae6a3586d7161f26a03b8a67f5e6e978fd9063118830c68a0acd87b8d8"
+      "bytes": 7360,
+      "sha256": "ac51a154502f35bfca901769d6e5da6ecf715ffe4cd397cdc192f3797a138ada"
     },
     {
       "path": "examples/WALKTHROUGH.md",
@@ -94,13 +94,13 @@
     },
     {
       "path": "portfolio.py",
-      "bytes": 32112,
-      "sha256": "6e6adf62193c11964a12ccd7254b2f42cc5a101bdd82a0756e68dd7b8c002c7d"
+      "bytes": 32866,
+      "sha256": "7928a2d21a4363b131f77c0eeefbb2a624333968ae0c59c67ca3181f6551f16f"
     },
     {
       "path": "portfolio_gui.py",
-      "bytes": 20361,
-      "sha256": "bcb5e21b9257386813bb6ce9c06a132ae36d3eab8cab61ba087b9879aafb3d58"
+      "bytes": 25948,
+      "sha256": "a6d7abc2ea5adb4529698c179dab600a416d7e11a54116ff6d269f830c194069"
     },
     {
       "path": "requirements-dev.txt",
@@ -114,13 +114,18 @@
     },
     {
       "path": "source_check.py",
-      "bytes": 3156,
-      "sha256": "c366b0bc8a7c11a5dcb9921fcd0d4a250b4940d2de228d6d2bb4803690ded729"
+      "bytes": 3190,
+      "sha256": "f6425135bb8a467503ebad125b677935e0b69cce64c37fd4578833004e26d474"
     },
     {
       "path": "tests/test_portfolio.py",
-      "bytes": 20004,
-      "sha256": "f888727ee4c5e3e1c49bdd1fdcabd2ab3ae2d0c8e5c3cdbd55a0444b6b3da7d7"
+      "bytes": 32166,
+      "sha256": "11fb3e9d37ce7f29b65d4df700a599e7a4513cd96b29c62bbdb8d5ad64796fe5"
+    },
+    {
+      "path": "tests/windows_visual_capture.py",
+      "bytes": 5307,
+      "sha256": "3e42a2e2cd2fd6a87670f3839f42f466dab8915b9d7bcaf03fa213d7e07b0f08"
     }
   ]
 }
