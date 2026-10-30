@@ -1,7 +1,10 @@
 """Original generated tests. MIT. Never uses a real portfolio or personal receipt."""
 import copy
+import csv
+from contextlib import nullcontext
 import gc
 import hashlib
+from html.parser import HTMLParser
 import io
 import json
 import os
@@ -50,6 +53,125 @@ class CoreTests(unittest.TestCase):
             self.assertNotIn(str(self.base).encode(), data)
             self.assertNotIn(b'SECRET_EVIDENCE_CONTENT_123', data)
             self.assertNotIn(b'private-receipt.txt', data)
+    def check_fictional_claims_match_across_export_formats(self, subtests=True):
+        # This expected matrix is authored independently of the output renderers.
+        expected = {
+            'workshop-inventory': [
+                ('reported', 'Reported', 'The fictional author reports trying a small generated inventory.', ('demo-receipt',)),
+                ('planned', 'Planned', 'Barcode entry remains a future idea.', ()),
+            ],
+            'community-guide': [
+                ('unverified', 'Unverified', 'The example does not establish that the guide improves comprehension.', ('example-link',)),
+                ('observed', 'Observed (author-stated)', 'The fictional author marks a draft as personally reviewed; this remains an author-stated label.', ('review-note',)),
+            ],
+        }
+        titles = {'workshop-inventory': 'Workshop inventory helper', 'community-guide': 'Community project guide'}
+        evidence = {'demo-receipt': ('file', 'Generated demonstration receipt'),
+                    'example-link': ('link', 'Fictional reference URL'),
+                    'review-note': ('note', 'Author review note')}
+        private_receipt = self.base/'private-receipt.txt'
+        private_bytes = b'FICTIONAL_PRIVATE_RECEIPT_CONTENT_123'
+        self.doc['evidence'][0]['source'] = str(private_receipt)
+
+        class Sections(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.values = []
+                self.current = None
+            def handle_starttag(self, tag, attrs):
+                if tag == 'section' and ('class', 'card') in attrs:
+                    self.current = []
+            def handle_data(self, data):
+                if self.current is not None:
+                    self.current.append(data)
+            def handle_endtag(self, tag):
+                if tag == 'section' and self.current is not None:
+                    self.values.append(' '.join(''.join(self.current).split()))
+                    self.current = None
+
+        for check_files in (False, True):
+            with (self.subTest(check_files=check_files) if subtests else nullcontext()):
+                if check_files:
+                    private_receipt.write_bytes(private_bytes)
+                target = self.base/('checked' if check_files else 'unchecked')
+                p.export(self.doc, self.example_base, target, check_files=check_files)
+                self.assertEqual(p.verify_bundle(target)['status'], 'PASS')
+                public = json.loads((target/'portfolio.json').read_text(encoding='utf-8'))
+                pdf_pages = [page.extract_text() for page in PdfReader(target/'portfolio.pdf').pages]
+                self.assertEqual(len(pdf_pages), 3)  # index, then one page per fictional case study
+                self.assertEqual([project['id'] for project in public['projects']], list(expected))
+
+                for page_number, (project_id, outcomes) in enumerate(expected.items(), 1):
+                    project = public['projects'][page_number-1]
+                    self.assertEqual([(item['status'], item['statement'], tuple(item['evidence']))
+                                      for item in project['outcomes']],
+                                     [(status, statement, refs) for status, _, statement, refs in outcomes])
+                    case_html = (target/'case-studies'/f'{project_id}.html').read_text(encoding='utf-8')
+                    sections = Sections(); sections.feed(case_html)
+                    self.assertEqual(len(sections.values), len(outcomes))
+                    self.assertIn(titles[project_id], pdf_pages[page_number])
+                    pdf_outcomes = pdf_pages[page_number].split('Outcomes and evidence\n', 1)[1].split('\nLimitations and next steps', 1)[0].strip()
+                    expected_pdf = '\n'.join('\n'.join([label, statement] +
+                                                       (['Evidence IDs: ' + ', '.join(refs)] if refs else []))
+                                             for _, label, statement, refs in outcomes)
+                    self.assertEqual(pdf_outcomes, expected_pdf)
+                    for section, (_, label, statement, refs) in zip(sections.values, outcomes):
+                        self.assertIn(label, section)
+                        self.assertIn(statement, section)
+                        if refs:
+                            self.assertIn('Evidence IDs: ' + ', '.join(refs), section)
+                        else:
+                            self.assertNotIn('Evidence IDs:', section)
+
+                rows = list(csv.DictReader(io.StringIO((target/'evidence.csv').read_text(encoding='utf-8'))))
+                self.assertEqual([row['id'] for row in rows], list(evidence))
+                public_evidence = {item['id']: item for item in public['evidence']}
+                for row in rows:
+                    kind, label = evidence[row['id']]
+                    self.assertEqual((row['kind'], row['label']), (kind, label))
+                    self.assertEqual((public_evidence[row['id']]['kind'], public_evidence[row['id']]['label']), (kind, label))
+                    expected_check = 'sha256_recorded' if kind == 'file' and check_files else ('not_checked' if kind == 'file' else 'reference_only')
+                    self.assertEqual(row['check'], expected_check)
+                    self.assertEqual(public_evidence[row['id']]['check'], expected_check)
+                self.assertNotIn('source', rows[0])
+                if check_files:
+                    expected_hash = hashlib.sha256(private_bytes).hexdigest()
+                    self.assertEqual(rows[0]['sha256'], expected_hash)
+                    self.assertEqual(public_evidence['demo-receipt']['sha256'], expected_hash)
+                else:
+                    self.assertEqual(rows[0]['sha256'], '')
+                    self.assertNotIn('sha256', public_evidence['demo-receipt'])
+
+                text_outputs = [target/'index.html', target/'portfolio.json', target/'evidence.csv', target/'README.txt']
+                text_outputs += list((target/'case-studies').glob('*.html'))
+                for path in text_outputs:
+                    content = path.read_bytes()
+                    self.assertNotIn(str(private_receipt).encode(), content)
+                    self.assertNotIn(private_receipt.name.encode(), content)
+                    self.assertNotIn(private_bytes, content)
+                self.assertNotIn(private_receipt.name, '\n'.join(pdf_pages))
+                self.assertNotIn(private_bytes.decode(), '\n'.join(pdf_pages))
+    def test_fictional_claims_match_across_export_formats(self):
+        self.check_fictional_claims_match_across_export_formats()
+    def test_cross_format_evaluation_detects_wrong_pdf_status(self):
+        original = p.render_pdf
+        def wrong_status(data, cancel=None):
+            changed = copy.deepcopy(data)
+            changed['projects'][0]['outcomes'][0]['status'] = 'observed'
+            return original(changed, cancel)
+        with mock.patch.object(p, 'render_pdf', side_effect=wrong_status):
+            with self.assertRaisesRegex(AssertionError, 'Reported'):
+                self.check_fictional_claims_match_across_export_formats(subtests=False)
+    def test_cross_format_evaluation_detects_missing_html_evidence(self):
+        original = p.case_body
+        def missing_evidence(project, evidence):
+            rendered = original(project, evidence)
+            if project['id'] == 'workshop-inventory':
+                return rendered.replace('Evidence IDs: demo-receipt', 'Evidence IDs: wrong-id', 1)
+            return rendered
+        with mock.patch.object(p, 'case_body', side_effect=missing_evidence):
+            with self.assertRaisesRegex(AssertionError, 'Evidence IDs: demo-receipt'):
+                self.check_fictional_claims_match_across_export_formats(subtests=False)
     def test_pdf_is_three_pages_with_expected_text_and_neutral_machine_metadata(self):
         members = p.build_members(self.doc, self.example_base)
         reader = PdfReader(io.BytesIO(members['portfolio.pdf']))
@@ -197,6 +319,19 @@ class CoreTests(unittest.TestCase):
         stop = threading.Event(); stop.set(); target = self.base/'cancelled'
         with self.assertRaisesRegex(p.BuildError, 'cancelled'): p.export(self.doc, self.example_base, target, cancel=stop)
         self.assertFalse(target.exists())
+    def test_prepared_bundle_is_frozen_and_writes_only_after_review(self):
+        target = self.base/'reviewed'
+        prepared = p.prepare_export(self.doc, self.example_base, check_files=True)
+        public_json = prepared.members['portfolio.json']
+        self.assertFalse(target.exists())
+        self.assertNotIn(str(self.example_base).encode(), public_json)
+        self.assertNotIn((self.example_base/'receipt.txt').read_bytes(), public_json)
+        self.doc['profile']['name'] = 'Changed after preparation'
+        result = p.write_prepared(prepared, target)
+        self.assertEqual(result['status'], 'PASS')
+        self.assertEqual((target/'portfolio.json').read_bytes(), public_json)
+        self.assertEqual(json.loads(public_json)['profile']['name'], 'Alex Example')
+        self.assertEqual(p.verify_bundle(target)['archive_sha256'], result['archive_sha256'])
     def test_cooperative_cancel_during_evidence_hash_is_controlled(self):
         stop = threading.Event(); stop.set()
         with self.assertRaisesRegex(p.BuildError, 'cancelled'): p.hash_evidence(self.example_base/'receipt.txt', stop, p.MAX_FILE)
@@ -262,21 +397,55 @@ class GuiTests(unittest.TestCase):
         self.app.projects.selection_clear(0,'end'); self.app.projects.selection_set(1); self.app.select_project()
         self.assertEqual(self.app.collect()['projects'][0]['title'], 'Edited fixture')
     def test_gui_worker_exports_real_fixture_without_tk_thread_calls(self):
+        self.app.demo(); self.app.hash_files.set(True)
+        with tempfile.TemporaryDirectory(prefix='outlands-portfolio-gui-') as folder:
+            target = Path(folder)/'bundle'; self.app.output.set(str(target)); self.app.start_export()
+            deadline = time.monotonic()+20
+            while self.app.busy and time.monotonic()<deadline: self.root.update(); time.sleep(.02)
+            self.assertFalse(self.app.busy); self.assertIsNotNone(self.app.review_window)
+            self.assertFalse(target.exists())
+            prepared = self.app.pending_review[0]
+            frame = self.app.review_window.winfo_children()[0]
+            book = next(w for w in frame.winfo_children() if w.winfo_class() == 'TNotebook')
+            tab = book.nametowidget(book.tabs()[0])
+            review = next(w for w in tab.winfo_children() if w.winfo_class() == 'Text').get('1.0', 'end')
+            json_tab = book.nametowidget(book.tabs()[1])
+            exact_json = next(w for w in json_tab.winfo_children() if w.winfo_class() == 'Text').get('1.0', 'end-1c')
+            self.assertIn('Alex Example', review)
+            self.assertIn('Community project guide', review)
+            self.assertIn('Sha256:', review)
+            self.assertNotIn(str(ROOT/'examples'), review)
+            self.assertEqual(exact_json, prepared.members['portfolio.json'].decode())
+            public_data = json.loads(prepared.members['portfolio.json'])
+            self.assertEqual(public_data['evidence'][0]['sha256'], hashlib.sha256((ROOT/'examples/receipt.txt').read_bytes()).hexdigest())
+            self.assertNotIn(str(ROOT/'examples'), prepared.members['portfolio.json'].decode())
+            self.app.confirm_review()
+            while self.app.busy and time.monotonic()<deadline: self.root.update(); time.sleep(.02)
+            self.assertFalse(self.app.busy); self.assertIn('Export complete', self.app.status.get())
+            self.assertEqual((target/'portfolio.json').read_bytes(), prepared.members['portfolio.json'])
+            self.assertEqual(p.verify_bundle(target)['status'],'PASS')
+    def test_gui_review_cancel_and_existing_destination_do_not_write(self):
         self.app.demo()
         with tempfile.TemporaryDirectory(prefix='outlands-portfolio-gui-') as folder:
             target = Path(folder)/'bundle'; self.app.output.set(str(target)); self.app.start_export()
             deadline = time.monotonic()+20
             while self.app.busy and time.monotonic()<deadline: self.root.update(); time.sleep(.02)
-            self.assertFalse(self.app.busy); self.assertIn('Export complete', self.app.status.get())
-            self.assertEqual(p.verify_bundle(target)['status'],'PASS')
+            self.assertIsNotNone(self.app.review_window)
+            target.mkdir(); (target/'keep.txt').write_text('keep')
+            with mock.patch.object(self.app, 'notify_error') as notify:
+                self.app.confirm_review()
+            notify.assert_called_once(); self.assertIsNotNone(self.app.review_window)
+            self.app.cancel_review()
+            self.assertIsNone(self.app.pending_review)
+            self.assertEqual((target/'keep.txt').read_text(), 'keep')
     def test_gui_stop_requests_cancellation_and_retains_worker_state(self):
         self.app.demo(); self.app.output.set('unused-generated-output')
         entered = threading.Event()
-        def controlled(_document, _base, _output, _hashes, cancel, _progress):
+        def controlled(_document, _base, _hashes, cancel, _progress):
             entered.set()
             if not cancel.wait(5): raise AssertionError('Stop was not requested')
             raise p.BuildError('cancelled')
-        with mock.patch.object(p,'export',controlled):
+        with mock.patch.object(p,'prepare_export',controlled):
             self.app.start_export(); self.assertTrue(entered.wait(2)); self.app.request_stop()
             self.assertTrue(self.app.busy)
             deadline=time.monotonic()+5
