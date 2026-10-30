@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased - local work
+## 1.1.0 - release candidate (unreleased)
 
 - Added a desktop public-content review step before writing a bundle. It shows
   a readable inventory and the exact public JSON from the prepared export;

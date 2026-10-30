@@ -373,6 +373,75 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(p.cli(['--demo','--output',str(target)]), 2)
             self.assertNotIn(str(target), error.getvalue())
 
+class GuiUnsavedLogicTests(unittest.TestCase):
+    def test_paste_style_model_change_requires_discard_confirmation(self):
+        from portfolio_gui import App
+        class Editor:
+            dirty = False
+            clean_document = {'profile': {'name': 'Alex Example'}}
+            root = None
+            def collect(self): return {'profile': {'name': 'Alex Example pasted'}}
+            def evidence_form_has_draft(self): return False
+        editor = Editor()
+        with mock.patch('portfolio_gui.messagebox.askyesno', return_value=False) as confirm:
+            self.assertFalse(App.allow_replace(editor))
+        self.assertTrue(editor.dirty)
+        confirm.assert_called_once()
+    def test_unchanged_model_needs_no_discard_confirmation(self):
+        from portfolio_gui import App
+        class Editor:
+            dirty = False
+            clean_document = {'profile': {'name': 'Alex Example'}}
+            root = None
+            def collect(self): return {'profile': {'name': 'Alex Example'}}
+            def evidence_form_has_draft(self): return False
+        with mock.patch('portfolio_gui.messagebox.askyesno') as confirm:
+            self.assertTrue(App.allow_replace(Editor()))
+        confirm.assert_not_called()
+    def test_invalid_unsaved_outcome_needs_discard_confirmation(self):
+        from portfolio_gui import App
+        class Editor:
+            dirty = False
+            clean_document = {}
+            root = None
+            def collect(self): raise p.BuildError('outcomes: invalid pipe-separated CSV quoting')
+            def evidence_form_has_draft(self): return False
+        with mock.patch('portfolio_gui.messagebox.askyesno', return_value=False) as confirm:
+            self.assertFalse(App.allow_replace(Editor()))
+        confirm.assert_called_once()
+    def test_unsaved_evidence_form_requires_discard_confirmation(self):
+        from portfolio_gui import App
+        class Editor:
+            dirty = False
+            clean_document = {}
+            root = None
+            def collect(self): return {}
+            def evidence_form_has_draft(self): return True
+        with mock.patch('portfolio_gui.messagebox.askyesno', return_value=False) as confirm:
+            self.assertFalse(App.allow_replace(Editor()))
+        confirm.assert_called_once()
+    def test_evidence_form_draft_comparison_uses_current_selection(self):
+        from portfolio_gui import App
+        class List:
+            selected = ()
+            def selection(self): return self.selected
+        class Editor:
+            evidence_list = List()
+            document = {'evidence': [{'id': 'fixture-a', 'label': 'Fictional receipt',
+                                      'kind': 'note', 'note': 'Example only'}]}
+            evidence_fields = {'id': '', 'label': '', 'kind': 'note', 'source': '', 'note': ''}
+            def get(self, widget): return widget
+        editor = Editor()
+        self.assertFalse(App.evidence_form_has_draft(editor))
+        editor.evidence_fields['label'] = 'Pasted label'
+        self.assertTrue(App.evidence_form_has_draft(editor))
+        editor.evidence_list.selected = ('fixture-a',)
+        editor.evidence_fields = {'id': 'fixture-a', 'label': 'Fictional receipt',
+                                  'kind': 'note', 'source': '', 'note': 'Example only'}
+        self.assertFalse(App.evidence_form_has_draft(editor))
+        editor.evidence_fields['note'] = 'Changed example note'
+        self.assertTrue(App.evidence_form_has_draft(editor))
+
 class GuiTests(unittest.TestCase):
     def setUp(self):
         try:
@@ -396,6 +465,14 @@ class GuiTests(unittest.TestCase):
         self.app.demo(); self.app.set(self.app.project_fields['title'], 'Edited fixture')
         self.app.projects.selection_clear(0,'end'); self.app.projects.selection_set(1); self.app.select_project()
         self.assertEqual(self.app.collect()['projects'][0]['title'], 'Edited fixture')
+    def test_gui_entry_change_without_key_release_warns_before_replacing_input(self):
+        self.app.demo()
+        self.assertFalse(self.app.dirty)
+        self.app.profile_fields['name'].insert('end', ' pasted')
+        self.assertFalse(self.app.dirty)
+        with mock.patch('portfolio_gui.messagebox.askyesno', return_value=False) as confirm:
+            self.assertFalse(self.app.allow_replace())
+        confirm.assert_called_once()
     def test_gui_worker_exports_real_fixture_without_tk_thread_calls(self):
         self.app.demo(); self.app.hash_files.set(True)
         with tempfile.TemporaryDirectory(prefix='outlands-portfolio-gui-') as folder:

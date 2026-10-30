@@ -18,7 +18,7 @@ from typing import Callable, NamedTuple
 from urllib.parse import urlsplit
 import zipfile
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 MAX_INPUT = 256 * 1024
 MAX_FILE = 16 * 1024 * 1024
 MAX_EVIDENCE_BYTES = 64 * 1024 * 1024

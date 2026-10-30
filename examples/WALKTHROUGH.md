@@ -13,15 +13,21 @@
    Saving a file hash does not change that meaning.
 6. Save input as a **new** private JSON if you want to keep edits. File source
    paths become absolute in that private copy. Keep it outside the public repo.
-7. Choose a new output directory. Export once without the hash checkbox; the
-   file reference should show File not checked. Choose another fresh directory
-   and export with hashing enabled; it should show SHA-256 recorded.
-8. Open the PDF and HTML index. Confirm the changed title, explicit limitations,
+7. Choose a new output directory and leave the hash checkbox off. Click
+   **Review and export...**. Inspect both **Readable review** and
+   **Exact public JSON**; the output directory should not exist yet. Click
+   **Back to editor** and confirm it still does not exist. Prepare the same
+   fresh destination again, then click **Export reviewed bundle**. The file
+   reference in the output should show File not checked.
+8. Choose another fresh output directory and enable hashing. Click
+   **Review and export...**, inspect both tabs, then click
+   **Export reviewed bundle**. The file reference should show SHA-256 recorded.
+9. Open the PDF and HTML index. Confirm the changed title, explicit limitations,
    claim labels and working relative links. There should be no raw receipt file
    or private source path in the public bundle.
-9. Run `python portfolio.py --verify YOUR_BUNDLE_FOLDER`. For a disposable copy
+10. Run `python portfolio.py --verify YOUR_BUNDLE_FOLDER`. For a disposable copy
    only, edit `index.html` and verify again: the check must fail.
-10. Replace fictional input with your own authorized material before using it as
+11. Replace fictional input with your own authorized material before using it as
     your actual portfolio. Review all exported text, public URLs, labels and
     metadata before sharing. The program does not upload the bundle for you.
 

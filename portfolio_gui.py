@@ -43,6 +43,7 @@ class App(ttk.Frame):
         super().__init__(root, padding=16)
         self.root = root
         self.document = empty_document()
+        self.clean_document = copy.deepcopy(self.document)
         self.base = Path.cwd()
         self.current = None
         self.busy = False
@@ -86,7 +87,6 @@ class App(ttk.Frame):
         ttk.Label(self, textvariable=self.status, wraplength=1040).pack(anchor='w', pady=(10, 0))
         ttk.Label(self, text='Exports contain your supplied text, URLs, evidence labels and optional hashes. Review before sharing. Source evidence files are not copied.', wraplength=1040).pack(anchor='w', pady=(7, 0))
         root.protocol('WM_DELETE_WINDOW', self.close)
-        root.bind('<KeyRelease>', lambda _e: setattr(self, 'dirty', True))
         self.poll_id = self.after(100, self.poll)
 
     @staticmethod
@@ -181,10 +181,12 @@ class App(ttk.Frame):
             self.set(widget, '\n'.join(value) if isinstance(value, list) else value)
         self.refresh_projects()
         self.refresh_evidence()
+        self.clear_evidence_form()
         for widget in self.project_fields.values(): self.set(widget, '')
         if self.document['projects']:
             self.projects.selection_set(0); self.load_project(0)
         self.status.set('Input loaded in memory. Review each tab; no files have been exported.')
+        self.clean_document = copy.deepcopy(self.document)
         self.dirty = False
 
     def refresh_projects(self):
@@ -236,6 +238,16 @@ class App(ttk.Frame):
         for item in self.evidence_list.get_children(): self.evidence_list.delete(item)
         for item in self.document['evidence']: self.evidence_list.insert('', 'end', iid=item['id'], text=item['id'], values=(item['label'], item['kind']))
 
+    def clear_evidence_form(self):
+        for key, widget in self.evidence_fields.items(): self.set(widget, 'note' if key == 'kind' else '')
+
+    def evidence_form_has_draft(self):
+        selected = self.evidence_list.selection()
+        entry = next((e for e in self.document['evidence'] if selected and e['id'] == selected[0]), None)
+        expected = {key: (entry.get(key, '') if entry else ('note' if key == 'kind' else ''))
+                    for key in self.evidence_fields}
+        return any(self.get(widget).strip() != expected[key] for key, widget in self.evidence_fields.items())
+
     def select_evidence(self, _event=None):
         if self.busy or not self.evidence_list.selection(): return
         selected = self.evidence_list.selection()[0]
@@ -258,6 +270,7 @@ class App(ttk.Frame):
             prior = [e for e in self.document['evidence'] if e['id'] != item['id']]
             if len(prior) >= 20: raise core.BuildError('evidence: at most 20 entries')
             self.document['evidence'] = prior + [item]; self.refresh_evidence()
+            self.evidence_list.selection_set(item['id'])
             self.dirty = True
             self.status.set('Evidence entry saved in memory. Use its ID in project outcomes.')
         except core.BuildError as error: self.notify_error(error)
@@ -266,12 +279,21 @@ class App(ttk.Frame):
         if self.busy or not self.evidence_list.selection(): return
         selected = self.evidence_list.selection()[0]
         self.document['evidence'] = [e for e in self.document['evidence'] if e['id'] != selected]; self.refresh_evidence()
+        self.clear_evidence_form()
         self.dirty = True
         self.status.set('Evidence entry removed from memory. Remove any project references to its ID before exporting.')
 
     def new(self):
         if not self.busy and self.allow_replace(): self.show_document(empty_document(), Path.cwd())
     def allow_replace(self):
+        # Entry/Text changes can arrive without a KeyRelease (for example, mouse paste).
+        # Compare all in-progress input with the last loaded or saved document.
+        if not self.dirty:
+            try:
+                self.dirty = self.collect() != self.clean_document or self.evidence_form_has_draft()
+            except core.BuildError:
+                # An invalid unsaved outcome line still needs a discard warning.
+                self.dirty = True
         return not self.dirty or messagebox.askyesno('Unsaved input', 'Discard the current unsaved editor input? Save it as a new JSON first if you want to keep it.', parent=self.root)
     def demo(self):
         if self.busy or not self.allow_replace(): return
@@ -293,6 +315,7 @@ class App(ttk.Frame):
         if selected:
             try:
                 core.write_input(document, self.base, selected); self.dirty = False
+                self.clean_document = copy.deepcopy(self.document)
                 self.status.set('New private input JSON saved. Evidence file paths are private configuration, not public bundle data.')
             except (core.BuildError, OSError) as error: self.notify_error(error)
     def choose_output(self):
