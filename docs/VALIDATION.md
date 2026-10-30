@@ -85,7 +85,8 @@ full suite, fictional CLI export and separate verification. Tests make no runtim
 network call; package installation and the separate advisory-check step use PyPI.
 For pull requests, the Windows 3.12 job also attempts to capture both tabs of
 the fictional review window after checking the cancel/no-write and confirmed
-export paths. It uploads short-lived screenshots for human visual inspection;
+export paths. It checks that both confirmation controls fit inside the Windows
+desktop work area, then uploads short-lived screenshots for human visual inspection;
 the artifact alone is not a visual PASS.
 See [Actions](https://github.com/TheOutlandsDev/outlands-portfolio-builder/actions)
 for actual results, rather than treating workflow configuration as a passing run.
