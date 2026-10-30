@@ -12,7 +12,7 @@ NAMES=sorted([
     '.github/ISSUE_TEMPLATE/feature_request.yml','.github/workflows/checks.yml',
     'LICENSE','README.md','CHANGELOG.md','CONTRIBUTING.md','SECURITY.md','THIRD-PARTY-NOTICES.txt',
     'portfolio.py','portfolio_gui.py','requirements.txt','requirements-dev.txt',
-    'check_advisories.py','source_check.py','tests/test_portfolio.py',
+    'check_advisories.py','source_check.py','tests/test_portfolio.py','tests/windows_visual_capture.py',
     'examples/workshop.json','examples/receipt.txt','examples/WALKTHROUGH.md',
     'docs/PROVENANCE.md','docs/VALIDATION.md','docs/DEPENDENCIES.json'])
 EXCLUDED={'.git','.venv','__pycache__','output','private-inputs','coverage'}
