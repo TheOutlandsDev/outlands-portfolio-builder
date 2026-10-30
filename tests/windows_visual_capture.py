@@ -44,6 +44,27 @@ def capture(root, window, path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def assert_controls_in_work_area(window, frame):
+    if os.name != 'nt':
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    work_area = wintypes.RECT()
+    if not ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(work_area), 0):
+        raise RuntimeError('could not determine Windows desktop work area')
+    buttons = [item for item in frame.winfo_children() if isinstance(item, ttk.Frame)][-1]
+    controls = [item for item in buttons.winfo_children() if isinstance(item, ttk.Button)]
+    if len(controls) != 2:
+        raise RuntimeError('review confirmation controls are missing')
+    for control in controls:
+        left, top = control.winfo_rootx(), control.winfo_rooty()
+        right, bottom = left + control.winfo_width(), top + control.winfo_height()
+        if (left < work_area.left or top < work_area.top or
+                right > work_area.right or bottom > work_area.bottom):
+            raise RuntimeError('review confirmation control is outside the Windows work area')
+
+
 def main(require_windows=True):
     if require_windows and os.name != 'nt':
         raise RuntimeError('this capture must run on a native Windows runner')
@@ -63,11 +84,13 @@ def main(require_windows=True):
                 raise RuntimeError('review must open before any output is written')
             window = app.review_window
             screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
-            if screen_width < 940 or screen_height < 760:
-                raise RuntimeError('Windows runner screen is too small for a 900x700 visual check')
-            window.geometry('900x700+20+20')
+            if screen_width < 940 or screen_height < 700:
+                raise RuntimeError('Windows runner screen is too small for a 900x620 visual check')
+            window.geometry('+20+20')
             root.update()
             frame = window.winfo_children()[0]
+            assert_controls_in_work_area(window, frame)
+            review_dimensions = f'{window.winfo_width()}x{window.winfo_height()}'
             book = next(item for item in frame.winfo_children() if isinstance(item, ttk.Notebook))
             readable_sha = capture(root, window, output / 'review-readable.png')
             book.select(1)
@@ -88,7 +111,7 @@ def main(require_windows=True):
             if verification['status'] != 'PASS':
                 raise RuntimeError('confirmed fictional bundle failed verification')
             result = {'status': 'PASS', 'platform': 'Windows runner' if os.name == 'nt' else 'Linux preflight',
-                      'review_window': '900x700', 'files': verification['files'],
+                      'review_window': review_dimensions, 'files': verification['files'],
                       'readable_sha256': readable_sha, 'json_sha256': exact_sha}
             (output / 'result.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
             print(json.dumps(result))
