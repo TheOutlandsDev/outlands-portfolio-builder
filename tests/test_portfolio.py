@@ -451,6 +451,20 @@ class GuiTests(unittest.TestCase):
             deadline=time.monotonic()+5
             while self.app.busy and time.monotonic()<deadline: self.root.update(); time.sleep(.02)
         self.assertFalse(self.app.busy); self.assertIn('cancelled', self.app.status.get())
+    def test_gui_stop_after_preparation_queued_discards_review(self):
+        self.app.demo()
+        with tempfile.TemporaryDirectory(prefix='outlands-portfolio-gui-') as folder:
+            target = Path(folder)/'bundle'; self.app.output.set(str(target)); self.app.start_export()
+            self.app.worker.join(20)
+            self.assertFalse(self.app.worker.is_alive())
+            self.app.request_stop()
+            deadline = time.monotonic()+5
+            while self.app.busy and time.monotonic()<deadline: self.root.update(); time.sleep(.02)
+            self.assertFalse(self.app.busy)
+            self.assertIsNone(self.app.review_window)
+            self.assertIsNone(self.app.pending_review)
+            self.assertFalse(target.exists())
+            self.assertIn('cancelled', self.app.status.get().lower())
     def test_gui_plain_text_does_not_interpret_html(self):
         self.app.demo(); self.app.set(self.app.profile_fields['summary'],'<img src="https://example.invalid">')
         self.assertEqual(self.app.get(self.app.profile_fields['summary']),'<img src="https://example.invalid">')
