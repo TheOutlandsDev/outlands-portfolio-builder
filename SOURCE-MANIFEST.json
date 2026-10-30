@@ -74,8 +74,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 7274,
-      "sha256": "175623f9988d5b80340ff0ed4cd0a51c650a43629b86987c26456c84393af2d4"
+      "bytes": 7360,
+      "sha256": "ac51a154502f35bfca901769d6e5da6ecf715ffe4cd397cdc192f3797a138ada"
     },
     {
       "path": "examples/WALKTHROUGH.md",
@@ -100,7 +100,7 @@
     {
       "path": "portfolio_gui.py",
       "bytes": 25948,
-      "sha256": "dd77874fe1b3b1ca0feda5eb62a492cc1cebfda9f1765f38c2e58754cf6580d9"
+      "sha256": "a6d7abc2ea5adb4529698c179dab600a416d7e11a54116ff6d269f830c194069"
     },
     {
       "path": "requirements-dev.txt",
@@ -124,8 +124,8 @@
     },
     {
       "path": "tests/windows_visual_capture.py",
-      "bytes": 4142,
-      "sha256": "75d6004efb42d67d14f4dbab314a6d62d3f7fe6d8da28885f92506e99b20cc3c"
+      "bytes": 5307,
+      "sha256": "3e42a2e2cd2fd6a87670f3839f42f466dab8915b9d7bcaf03fa213d7e07b0f08"
     }
   ]
 }

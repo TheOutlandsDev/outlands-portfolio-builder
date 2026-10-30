@@ -322,7 +322,7 @@ class App(ttk.Frame):
         data = json.loads(public_json)
         self.pending_review = (prepared, output)
         window = tk.Toplevel(self.root); self.review_window = window
-        window.title('Review public bundle before export'); window.geometry('900x700'); window.minsize(620, 450)
+        window.title('Review public bundle before export'); window.geometry('900x620'); window.minsize(620, 450)
         window.transient(self.root); window.protocol('WM_DELETE_WINDOW', self.cancel_review)
         frame = ttk.Frame(window, padding=14); frame.pack(fill='both', expand=True)
         ttk.Label(frame, text='Review this frozen public snapshot', font=('Segoe UI', 16, 'bold')).pack(anchor='w')
