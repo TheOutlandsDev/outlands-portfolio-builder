@@ -99,8 +99,8 @@
     },
     {
       "path": "portfolio_gui.py",
-      "bytes": 25948,
-      "sha256": "a6d7abc2ea5adb4529698c179dab600a416d7e11a54116ff6d269f830c194069"
+      "bytes": 27246,
+      "sha256": "3c099159ba0ec9c252236e10b9f75a30b13b4964ab819b49340994cd06a32546"
     },
     {
       "path": "requirements-dev.txt",
@@ -119,8 +119,8 @@
     },
     {
       "path": "tests/test_portfolio.py",
-      "bytes": 32166,
-      "sha256": "11fb3e9d37ce7f29b65d4df700a599e7a4513cd96b29c62bbdb8d5ad64796fe5"
+      "bytes": 36107,
+      "sha256": "73b5f8418f0f5e3be891e41c54ad11509fff9c3e02e812018df3e24e19492293"
     },
     {
       "path": "tests/windows_visual_capture.py",
