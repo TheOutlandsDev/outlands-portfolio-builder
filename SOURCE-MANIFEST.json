@@ -29,8 +29,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 801,
-      "sha256": "aec8c8c69f399ec72ddecc295f67b6f154dd5e4270c64b6e1fc0410fb3b8bd36"
+      "bytes": 1191,
+      "sha256": "63026519931ec7f5a6878f3fa8c1e2e63c3321752d0c128f5f91138e0640a26a"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -44,8 +44,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 11962,
-      "sha256": "f414fccf210d4dd3b5f782b2521d294923c61a9b85c32884552890b4ec90ec4d"
+      "bytes": 12422,
+      "sha256": "44fe64113a29f0e80c21a7ae0c306a01fcf804a1382c9cfcaa349ee697f12055"
     },
     {
       "path": "SECURITY.md",
@@ -74,8 +74,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 4132,
-      "sha256": "c69814ae6a3586d7161f26a03b8a67f5e6e978fd9063118830c68a0acd87b8d8"
+      "bytes": 6640,
+      "sha256": "8b96c0f51e74326907a76af44793972110fafb8336d1dbc7445125ad26cbaebf"
     },
     {
       "path": "examples/WALKTHROUGH.md",
@@ -94,13 +94,13 @@
     },
     {
       "path": "portfolio.py",
-      "bytes": 32112,
-      "sha256": "6e6adf62193c11964a12ccd7254b2f42cc5a101bdd82a0756e68dd7b8c002c7d"
+      "bytes": 32866,
+      "sha256": "7928a2d21a4363b131f77c0eeefbb2a624333968ae0c59c67ca3181f6551f16f"
     },
     {
       "path": "portfolio_gui.py",
-      "bytes": 20361,
-      "sha256": "bcb5e21b9257386813bb6ce9c06a132ae36d3eab8cab61ba087b9879aafb3d58"
+      "bytes": 25748,
+      "sha256": "922721b544395cb587b2da37a370f5a9fe53a6b164ace930f88c1dd2e7472107"
     },
     {
       "path": "requirements-dev.txt",
@@ -119,8 +119,8 @@
     },
     {
       "path": "tests/test_portfolio.py",
-      "bytes": 20004,
-      "sha256": "f888727ee4c5e3e1c49bdd1fdcabd2ab3ae2d0c8e5c3cdbd55a0444b6b3da7d7"
+      "bytes": 31344,
+      "sha256": "bb06f082b5416b613aff0aa7ee43abd9c2bb319028e12ff92e2e66b659cd7d19"
     }
   ]
 }

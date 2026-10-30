@@ -77,11 +77,17 @@ itself makes no network requests. pip needs network access to acquire dependenci
 7. Choose a **new** output folder with an existing parent. Select **Hash selected
    evidence files** only if you want their contents read for SHA-256. By default,
    file evidence is labelled **File not checked** and no evidence content is read.
-8. Click **Export bundle**. It validates, renders and checks the archive before
-   creating the destination, then verifies the written bundle. Review the result
-   before sharing. Export uses a content snapshot captured when you click it;
-   subsequent edits apply to a later export. **Stop** is cooperative and waits
-   for the current operation. It is not a hard timeout on blocked filesystem I/O.
+8. Click **Review and export...**. The app validates and prepares a complete
+   bundle in memory, then opens a public-content review window. Nothing has been
+   written yet. Read the human-readable inventory and the exact public JSON;
+   both come from the prepared bundle. **Back to editor** discards that snapshot.
+   **Export reviewed bundle** writes those same prepared bytes to the new folder
+   and independently verifies them. The review is a manual disclosure check,
+   not automatic redaction or a guarantee that arbitrary text is safe to share.
+   Edits or evidence-file changes after preparation are not reflected in the
+   frozen snapshot; return to the editor and prepare again if they matter.
+   **Stop** is cooperative and waits for the current operation. It is not a
+   hard timeout on blocked filesystem I/O. Review the result before sharing.
 
 Input edits are not automatically saved by exporting. The public `portfolio.json`
 inside an export is a normalized report, **not** the editable input format. Open

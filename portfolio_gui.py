@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import csv
 import io
+import json
 import os
 from pathlib import Path
 import queue
@@ -14,6 +15,28 @@ import portfolio as core
 def empty_document():
     return {'schema_version': 1, 'profile': {'name': '', 'title': '', 'summary': '', 'skills': [], 'contact': []},
             'projects': [], 'evidence': []}
+
+def public_review_text(data):
+    """Readable inventory of the already-built public JSON, without private paths."""
+    lines = ['PUBLIC PROFILE', data['profile']['name'], data['profile']['title'], data['profile']['summary']]
+    for label, values in [('Skills', data['profile']['skills']), ('Contact', data['profile']['contact'])]:
+        if values: lines.extend(['', label + ':', *values])
+    for project in data['projects']:
+        lines.extend(['', 'PROJECT: ' + project['title'], 'ID: ' + project['id'],
+                      'Role: ' + project['role'], 'Summary: ' + project['summary']])
+        for key in ('problem', 'approach', 'limitations'):
+            if project[key]: lines.extend([key.capitalize() + ':', project[key]])
+        for outcome in project['outcomes']:
+            lines.extend(['Outcome (' + core.STATES[outcome['status']] + '): ' + outcome['statement'],
+                          'Evidence IDs: ' + (', '.join(outcome['evidence']) or '(none)')])
+    lines.extend(['', 'PUBLIC EVIDENCE REFERENCES'])
+    for entry in data['evidence']:
+        lines.extend([entry['id'] + ': ' + entry['label'], 'Kind: ' + entry['kind'],
+                      'Check: ' + core.CHECK_LABELS[entry['check']]])
+        for key in ('url', 'sha256', 'bytes', 'note'):
+            if key in entry and entry[key] != '': lines.append(key.capitalize() + ': ' + str(entry[key]))
+    lines.extend(['', data['interpretation']])
+    return '\n'.join(lines) + '\n'
 
 class App(ttk.Frame):
     def __init__(self, root):
@@ -27,6 +50,8 @@ class App(ttk.Frame):
         self.cancel = threading.Event()
         self.events = queue.Queue()
         self.worker = None
+        self.pending_review = None
+        self.review_window = None
         self.pack(fill='both', expand=True)
         root.title('Outlands Portfolio Builder')
         root.geometry('1120x820'); root.minsize(940, 700)
@@ -54,7 +79,7 @@ class App(ttk.Frame):
         self.hash_files = tk.BooleanVar(value=False)
         ttk.Checkbutton(bottom, text='Hash selected evidence files (reads contents; never includes their contents)', variable=self.hash_files).grid(row=1, column=0, columnspan=2, sticky='w', pady=8)
         actions = ttk.Frame(bottom); actions.grid(row=0, column=2, rowspan=2)
-        self.export_button = ttk.Button(actions, text='Export bundle', command=self.start_export); self.export_button.pack(side='left', padx=4)
+        self.export_button = ttk.Button(actions, text='Review and export...', command=self.start_export); self.export_button.pack(side='left', padx=4)
         self.stop_button = ttk.Button(actions, text='Stop', command=self.request_stop, state='disabled'); self.stop_button.pack(side='left', padx=4)
         bottom.columnconfigure(0, weight=1)
         self.status = tk.StringVar(value='Start with your own profile or load the fictional example. Nothing is exported automatically.')
@@ -125,7 +150,7 @@ class App(ttk.Frame):
 
     def notify_error(self, error):
         self.status.set(str(error) if isinstance(error, core.BuildError) else 'Operation failed. Check the selected paths and settings.')
-        messagebox.showerror('Portfolio Builder', self.status.get(), parent=self.root)
+        messagebox.showerror('Portfolio Builder', self.status.get(), parent=self.review_window or self.root)
 
     def flush_project(self):
         if self.current is None: return
@@ -275,21 +300,68 @@ class App(ttk.Frame):
         selected = filedialog.asksaveasfilename(parent=self.root, title='Choose a NEW bundle folder name', initialfile='portfolio-export', confirmoverwrite=False)
         if selected: self.output.set(selected)
     def start_export(self):
-        if self.busy: return
+        if self.busy or self.review_window is not None: return
         try:
             document = core.validate(self.collect())
             if not self.output.get().strip(): raise core.BuildError('output: choose a new bundle folder')
-        except core.BuildError as error: self.notify_error(error); return
+            output = core.check_output(self.output.get())
+        except (core.BuildError, OSError) as error: self.notify_error(error); return
         self.busy = True; self.cancel.clear(); self.export_button.configure(state='disabled'); self.stop_button.configure(state='normal')
-        output, base, hashes = self.output.get(), self.base, self.hash_files.get()
+        base, hashes = self.base, self.hash_files.get()
         events, cancel = self.events, self.cancel
         def work():
             try:
-                result = core.export(document, base, output, hashes, cancel, lambda s: events.put(('status', s)))
-                events.put(('done', result))
+                prepared = core.prepare_export(document, base, hashes, cancel, lambda s: events.put(('status', s)))
+                events.put(('review', (prepared, output)))
             except Exception as error:
-                events.put(('error', str(error) if isinstance(error, core.BuildError) else 'Export failed. Check dependency installation, input and writable local storage.'))
+                events.put(('error', str(error) if isinstance(error, core.BuildError) else 'Preparation failed. Check dependency installation, input and local storage.'))
         self.worker = threading.Thread(target=work, name='portfolio-export', daemon=True); self.worker.start()
+
+    def show_review(self, prepared, output):
+        public_json = prepared.members['portfolio.json'].decode('utf-8')
+        data = json.loads(public_json)
+        self.pending_review = (prepared, output)
+        window = tk.Toplevel(self.root); self.review_window = window
+        window.title('Review public bundle before export'); window.geometry('900x700'); window.minsize(620, 450)
+        window.transient(self.root); window.protocol('WM_DELETE_WINDOW', self.cancel_review)
+        frame = ttk.Frame(window, padding=14); frame.pack(fill='both', expand=True)
+        ttk.Label(frame, text='Review this frozen public snapshot', font=('Segoe UI', 16, 'bold')).pack(anchor='w')
+        ttk.Label(frame, text='Nothing has been written yet. These prepared bytes will be exported only if you confirm. Public text, URLs, labels and optional hashes are shown below. Check them yourself; this is not automatic redaction.', wraplength=820).pack(anchor='w', pady=(5, 10))
+        book = ttk.Notebook(frame); book.pack(fill='both', expand=True)
+        for title, content in [('Readable review', public_review_text(data)), ('Exact public JSON', public_json)]:
+            tab = ttk.Frame(book); book.add(tab, text=title)
+            viewer = tk.Text(tab, wrap='word', font=('Consolas', 10), padx=10, pady=10)
+            scroll = ttk.Scrollbar(tab, orient='vertical', command=viewer.yview)
+            viewer.configure(yscrollcommand=scroll.set)
+            scroll.pack(side='right', fill='y'); viewer.pack(side='left', fill='both', expand=True)
+            viewer.insert('1.0', content); viewer.configure(state='disabled')
+        ttk.Label(frame, text='Source evidence files and private file paths are excluded. Cancel to edit, then prepare a new snapshot. The new output folder is checked again at confirmation.', wraplength=820).pack(anchor='w', pady=(10, 6))
+        buttons = ttk.Frame(frame); buttons.pack(anchor='e')
+        ttk.Button(buttons, text='Back to editor', command=self.cancel_review).pack(side='left', padx=5)
+        ttk.Button(buttons, text='Export reviewed bundle', command=self.confirm_review).pack(side='left', padx=5)
+        window.grab_set(); window.focus_set()
+        self.status.set('Public snapshot prepared. Review both tabs, then confirm or return to editing.')
+
+    def cancel_review(self):
+        self.pending_review = None
+        if self.review_window is not None:
+            self.review_window.grab_release(); self.review_window.destroy(); self.review_window = None
+        self.status.set('Review cancelled. No output was written; edit and prepare a new snapshot.')
+
+    def confirm_review(self):
+        if self.pending_review is None or self.busy: return
+        prepared, output = self.pending_review
+        try: core.check_output(output)
+        except (core.BuildError, OSError) as error: self.notify_error(error); return
+        self.pending_review = None
+        self.review_window.grab_release(); self.review_window.destroy(); self.review_window = None
+        self.busy = True; self.cancel.clear(); self.export_button.configure(state='disabled'); self.stop_button.configure(state='normal')
+        events, cancel = self.events, self.cancel
+        def work():
+            try: events.put(('done', core.write_prepared(prepared, output, cancel)))
+            except Exception as error:
+                events.put(('error', str(error) if isinstance(error, core.BuildError) else 'Export failed. Check writable local storage.'))
+        self.worker = threading.Thread(target=work, name='portfolio-write', daemon=True); self.worker.start()
     def request_stop(self):
         self.cancel.set(); self.status.set('Stop requested. Waiting for the current bounded operation; partial new output may remain.')
     def poll(self):
@@ -299,7 +371,8 @@ class App(ttk.Frame):
                 if kind == 'status': self.status.set(value)
                 else:
                     self.busy = False; self.export_button.configure(state='normal'); self.stop_button.configure(state='disabled')
-                    self.status.set(f'Export complete: {value["files"]} files, checked ZIP. Review all output before sharing.' if kind == 'done' else str(value) + ' A partial new folder may remain.')
+                    if kind == 'review': self.show_review(*value)
+                    else: self.status.set(f'Export complete: {value["files"]} files, checked ZIP. Review all output before sharing.' if kind == 'done' else str(value) + ' A partial new folder may remain.')
         except queue.Empty: pass
         self.poll_id = self.after(100, self.poll)
     def destroy(self):
@@ -307,6 +380,7 @@ class App(ttk.Frame):
             self.after_cancel(self.poll_id); self.poll_id = None
         super().destroy()
     def close(self):
+        if self.review_window is not None: self.cancel_review(); return
         if self.busy: self.request_stop(); self.status.set('Wait for the export worker to return, then close this window.'); return
         if self.allow_replace(): self.root.destroy()
 
