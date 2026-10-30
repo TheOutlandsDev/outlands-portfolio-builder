@@ -64,10 +64,11 @@ before the queued review opens discards that review without writing output.
 Evidence hashes, if selected, are captured during preparation. Review
 does not inspect arbitrary private data for secrets or prove safe publication.
 
-The actual Windows desktop was visually checked from blank startup. The fictional
-example was loaded with its real button; a fresh output was entered and Export
-clicked. The window reported eleven exported files, and a separate CLI verifier
-accepted that directory. No personal input or real evidence was used.
+For the earlier 42-case build, a Windows desktop was visually checked from blank
+startup. The fictional example was loaded with its real button; a fresh output
+was entered and Export clicked. The window reported eleven exported files, and
+a separate CLI verifier accepted that directory. No personal input or real
+evidence was used. This older visual check does not cover the new review window.
 
 A separate fictional two-project bundle with the example receipt hashed produced
 a three-page PDF. Every page was rendered with Poppler and visually inspected.
