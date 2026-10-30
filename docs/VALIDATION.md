@@ -2,7 +2,7 @@
 
 ## Local checks
 
-The current suite contains **47 cases**, including seven desktop lifecycle/editor
+The current suite contains **48 cases**, including eight desktop lifecycle/editor
 cases. In the earlier 42-case Windows Python 3.12 run, 41 passed and one native
 symlink fixture skipped because that review environment could not create it.
 That historical run does not cover the new cases. Skips are not platform passes.
@@ -12,10 +12,11 @@ On local Linux with Python 3.12.14 and the pinned test dependencies, the earlier
 45-case suite passed with `PORTFOLIO_REQUIRE_TK=1` and direct display access.
 The first sandboxed full run had six Tk display-connection errors; rerunning
 those six with direct display access passed, followed by the earlier 43-case
-suite and then the 45-case suite. The current 47-case suite adds pre-export review
+suite and then the 45-case suite. The 47-case suite added pre-export review
 coverage and passed as a full local run in 10.928 seconds, with zero failures,
-errors or skips. This is local acceptance, not a Windows or hosted-CI result for
-the new cases.
+errors or skips. After the queued-review Stop fix, the current 48-case suite
+passed locally in 12.694 seconds, with zero failures, errors or skips. The
+48-case run is local acceptance; Windows CI for this new fix remains pending.
 
 The tests generate their own portfolios, evidence and temporary directories.
 They cover schema/size/depth/type limits, duplicate JSON keys and IDs, evidence
@@ -58,7 +59,9 @@ The review path builds and checks the bundle in memory before showing a readable
 public-field inventory and the exact public JSON. Tests confirm that no folder is
 created before confirmation, cancellation does not write, a newly occupied
 destination is preserved, and the confirmed output uses the same prepared JSON
-bytes. Evidence hashes, if selected, are captured during preparation. Review
+bytes. The additional desktop case confirms that Stop after preparation but
+before the queued review opens discards that review without writing output.
+Evidence hashes, if selected, are captured during preparation. Review
 does not inspect arbitrary private data for secrets or prove safe publication.
 
 The actual Windows desktop was visually checked from blank startup. The fictional
