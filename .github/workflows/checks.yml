@@ -31,6 +31,17 @@ jobs:
       - name: Run Ubuntu engine and Tk tests
         if: runner.os == 'Linux'
         run: xvfb-run -a python -B -m unittest discover -s tests -v
+      - name: Capture fictional Windows review window
+        if: runner.os == 'Windows' && matrix.python == '3.12' && github.event_name == 'pull_request'
+        run: python -B tests/windows_visual_capture.py
+      - name: Preserve fictional Windows review captures
+        if: always() && runner.os == 'Windows' && matrix.python == '3.12' && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/portfolio-review-capture/
+          if-no-files-found: error
+          retention-days: 3
       - name: Export and independently verify a generated demo
         run: |
           python -B portfolio.py --demo --check-evidence --output ../ci-demo
