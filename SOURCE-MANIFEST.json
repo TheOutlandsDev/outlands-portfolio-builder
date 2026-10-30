@@ -29,8 +29,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 1327,
-      "sha256": "8246cb0f6734de9c87f1a33b6d0f1d7cfeb94076af77388516c7278421aed2f5"
+      "bytes": 1342,
+      "sha256": "a4176635c67c1f0b0dfacd988ea053a04901db3d24b34dab19a5c0d444cde7db"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -95,7 +95,7 @@
     {
       "path": "portfolio.py",
       "bytes": 32866,
-      "sha256": "7928a2d21a4363b131f77c0eeefbb2a624333968ae0c59c67ca3181f6551f16f"
+      "sha256": "297fb7fdd0a68a3b92cc7cf08c1452e8d955c905f9af4c03a984b969b6ca0b14"
     },
     {
       "path": "portfolio_gui.py",
